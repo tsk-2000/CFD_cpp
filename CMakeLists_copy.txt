@@ -1,0 +1,87 @@
+cmake_minimum_required(VERSION 3.20)
+project(my_solver LANGUAGES CXX)
+
+# ---------- 基本設定 ----------
+# ビルドタイプ（未指定なら Release）
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Build type" FORCE)
+endif()
+
+# 補完/解析に便利（clangd 等が読む）
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# 共通フラグ
+if(MSVC)
+  add_compile_options(/W4)
+else()
+  add_compile_options(-Wall -Wextra -O2)
+endif()
+
+# 実行ファイル
+add_executable(solver
+  src/main.cpp
+  src/flux.cpp
+  src/timeint.cpp
+  src/io_hdf5.cpp
+)
+
+# ---------- BLAS / LAPACK / LAPACKE ----------
+find_package(BLAS   REQUIRED)
+find_package(LAPACK REQUIRED)
+
+# LAPACKE（Cインターフェース）
+find_path(LAPACKE_INCLUDE_DIR lapacke.h)
+find_library(LAPACKE_LIB lapacke)
+if(NOT LAPACKE_INCLUDE_DIR OR NOT LAPACKE_LIB)
+  message(FATAL_ERROR "LAPACKE (lapacke.h / liblapacke) が見つかりません。パスを通すか、インストールしてください。")
+endif()
+
+target_include_directories(solver PRIVATE ${LAPACKE_INCLUDE_DIR})
+target_include_directories(solver PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_link_libraries(solver PRIVATE BLAS::BLAS LAPACK::LAPACK ${LAPACKE_LIB})
+
+# ---------- 便利ライブラリ（任意） ----------
+# パッケージが入っていれば自動で使われる。無ければスキップして続行（必要時に REQUIRED に変えてね）
+find_package(fmt    QUIET CONFIG)
+find_package(spdlog QUIET CONFIG)
+find_package(CLI11  QUIET CONFIG)
+# FFTW（必要になったら入れて有効化）
+# find_package(FFTW3  QUIET COMPONENTS FFTW3 FFTW3_THREADS)
+
+if(fmt_FOUND)
+  target_link_libraries(solver PRIVATE fmt::fmt)
+endif()
+if(spdlog_FOUND)
+  target_link_libraries(solver PRIVATE spdlog::spdlog)
+endif()
+if(CLI11_FOUND)
+  target_link_libraries(solver PRIVATE CLI11::CLI11)
+endif()
+if(FFTW3_FOUND)
+  target_link_libraries(solver PRIVATE FFTW3::FFTW3 FFTW3::FFTW3_THREADS)
+endif()
+
+# ---------- OpenMP（欲しくなったらON） ----------
+find_package(OpenMP QUIET)
+if(OpenMP_CXX_FOUND)
+  target_link_libraries(solver PRIVATE OpenMP::OpenMP_CXX)
+endif()
+
+# ---------- HDF5 ----------
+find_package(HDF5 REQUIRED COMPONENTS CXX)
+target_link_libraries(solver PRIVATE HDF5::HDF5)
+target_link_libraries(solver PRIVATE hdf5::hdf5_cpp)
+
+# ---------- 実行のワンコマンド化（run ターゲット） ----------
+add_custom_target(run
+  COMMAND $<TARGET_FILE:solver>
+  DEPENDS solver
+  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+  COMMENT "Running solver..."
+)
+
+# ---------- install（任意：配布用に綺麗に出力） ----------
+include(GNUInstallDirs)
+install(TARGETS solver RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
