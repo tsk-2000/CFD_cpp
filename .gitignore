@@ -41,5 +41,5 @@
 *.dwo
 
 # outputs
-debug/output/
-build/
+/debug/output/
+/build/

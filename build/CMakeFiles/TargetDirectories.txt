@@ -1,3 +1,0 @@
-/home/itsukimiyamoto/data/Cpp/CFD_cpp/build/CMakeFiles/solver.dir
-/home/itsukimiyamoto/data/Cpp/CFD_cpp/build/CMakeFiles/edit_cache.dir
-/home/itsukimiyamoto/data/Cpp/CFD_cpp/build/CMakeFiles/rebuild_cache.dir
