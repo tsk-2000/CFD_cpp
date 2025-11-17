@@ -13,7 +13,7 @@
 
 int main() {
 
-    auto g = Grid1D::make(2001, 1, -0.5, 0.5);
+    auto g = Grid1D::make(1001, 1, -0.5, 0.5);
 
     std::vector<U3> U(g.Ntot);
 
@@ -28,7 +28,6 @@ int main() {
     double t = 0.0;
     int iteration = 0;
     const int dump_every = 1;
-    const std::string h5file = "./debug/output/out.h5";
 
     for (int i = g.ilo(); i < g.ihi(); ++i) {
         std::string output = "./debug/output/output_" + std::to_string(i) + ".csv";
@@ -65,29 +64,5 @@ int main() {
         }
     }
 
-    std::printf("# x, rho, u, p\n");
-    for (int i = g.ilo(); i < g.ihi(); ++i) {
-        auto W = cons2prim(U[i]);
-        std::printf("%.8f, %.8f, %.8f, %.8f\n", g.xc[i], W.r, W.u, W.p);
-    }
-    std::printf("# iteration = %d\n", iteration);
-    
-    // std::string output = "./debug/output.csv";
-    // std::ofstream ofs(output);
-    // ofs << "# x, rho, u, p\n";
-    // ofs << std::fixed << std::setprecision(8);
-
-    // for (int i = g.ilo(); i < g.ihi(); ++i) {
-    //     auto W = cons2prim(U[i]);
-    //     ofs << g.xc[i] << ", " << W.r << ", " << W.u << ", " << W.p << "\n";
-    // }
-
-    // ofs.close();
-
-    // for (int i : {g.ilo(), g.ilo() + 50, g.ilo()+100, g.ihi()-1}) {
-    //     auto 
-    //     W = cons2prim(U[i]);
-    //     std::printf("i = %d x = %.4f rho = %.4f\n", i, g.xc[i], W.r);
-    // }
     return 0;
 }
